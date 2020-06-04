@@ -24,12 +24,12 @@ export class Fire extends Abilities {
         this._direction = Vector.VNormalize([this._sx - this._dx, this._sy - this._dy])
     }
 
-    update(game: Game): void {
+    public update(game: Game): void {
         this.move()
         this.draw(game.map.canvas)
     }
 
-    move(): void {
+    private move(): void {
         this._sx -= this._direction[0] * this._speed
         this._sy -= this._direction[1] * this._speed
 
@@ -37,7 +37,7 @@ export class Fire extends Abilities {
         if(this._sy > window.innerHeight || this._sy < 0) this._active = false
     }
 
-    draw(canvas: CanvasRenderingContext2D): void {
+    private draw(canvas: CanvasRenderingContext2D): void {
         canvas.beginPath()
         canvas.fillRect(this._sx - (this._width / 2), this._sy - (this._height / 2), this._width, this._height)
         canvas.closePath()
@@ -47,7 +47,7 @@ export class Fire extends Abilities {
         return this._active
     }
 
-    dead(fires: this[]): void {
+    public dead(fires: this[]): void {
         for(let i = 0; i < fires.length; i++) {
             if(!fires[i]) continue
             if (this._sx === fires[i].x && this._sy === fires[i].y) {

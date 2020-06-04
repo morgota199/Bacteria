@@ -33,27 +33,26 @@ export class Enemies {
 }
 
 export class Bacterium {
-    x: number
-    y: number
-    width: number = 50
-    height: number = 50
-    speed: number = 0.5
-    gravitation: number = 0.99
-    deg: number = 0
-    dir: {x: number, y: number}
-    damage: boolean = false
+    private _x: number
+    private _y: number
+    private _width: number = 50
+    private _height: number = 50
+    private _speed: number = 0.5
+    private _gravitation: number = 0.99
+    private _deg: number = 0
+    private _dir: {x: number, y: number}
 
     constructor(x: number, y: number) {
-        this.x = x
-        this.y = y
-        this.dir = {x: 0, y: 0}
+        this._x = x
+        this._y = y
+        this._dir = {x: 0, y: 0}
     }
 
-    update(game: Game, bacteria: Array<this>): void {
-        if (game.player.y + (game.player.height / 2) < this.y + (this.height / 2)) this.dir.y = -1
-        if (game.player.y + (game.player.height / 2) > this.y + (this.height / 2)) this.dir.y = 1
-        if (game.player.x + (game.player.width / 2) > this.x + (this.width / 2)) this.dir.x = 1
-        if (game.player.x + (game.player.width / 2) < this.x + (this.width / 2)) this.dir.x = -1
+    public update(game: Game, bacteria: Array<this>): void {
+        if (game.player.y + (game.player.height / 2) < this._y + (this._height / 2)) this._dir.y = -1
+        if (game.player.y + (game.player.height / 2) > this._y + (this._height / 2)) this._dir.y = 1
+        if (game.player.x + (game.player.width / 2) > this._x + (this._width / 2)) this._dir.x = 1
+        if (game.player.x + (game.player.width / 2) < this._x + (this._width / 2)) this._dir.x = -1
 
         this.repulsionFromBacteria(bacteria, game)
         this.onDamage(bacteria, game)
@@ -63,40 +62,40 @@ export class Bacterium {
         this.draw(game.map.canvas)
     }
 
-    move(game: Game): void {
-        this.x += this.dir.x * this.speed
-        this.y += this.dir.y * this.speed
+    private move(game: Game): void {
+        this._x += this._dir.x * this._speed
+        this._y += this._dir.y * this._speed
 
-        this.dir.x *= this.gravitation
-        this.dir.y *= this.gravitation
+        this._dir.x *= this._gravitation
+        this._dir.y *= this._gravitation
 
-        this.deg = Math.atan2(
-            game.player.x - (this.x + (this.width / 2)),
-            -(game.player.y - (this.y + (this.height / 2)))
+        this._deg = Math.atan2(
+            game.player.x - (this._x + (this._width / 2)),
+            -(game.player.y - (this._y + (this._height / 2)))
         )
 
-        this.speed = 0.5
-        this.gravitation = 0.99
+        this._speed = 0.5
+        this._gravitation = 0.99
     }
 
-    draw(canvas: CanvasRenderingContext2D): void {
+    private draw(canvas: CanvasRenderingContext2D): void {
         canvas.save()
 
-        canvas.translate(this.x + (this.width / 2), this.y + (this.height / 2))
-        canvas.rotate(this.deg)
-        canvas.translate(-(this.x + (this.width / 2)), -(this.y + (this.height / 2)))
+        canvas.translate(this._x + (this._width / 2), this._y + (this._height / 2))
+        canvas.rotate(this._deg)
+        canvas.translate(-(this._x + (this._width / 2)), -(this._y + (this._height / 2)))
 
-        canvas.fillRect(this.x, this.y, this.width, this.height)
+        canvas.fillRect(this._x, this._y, this._width, this._height)
 
         canvas.restore()
     }
 
-    repulsionFromBacteria(bacteria: this[], game: Game): boolean {
+    private repulsionFromBacteria(bacteria: this[], game: Game): boolean {
         for(let i = 0; i < bacteria.length; i++) {
             if(!bacteria[i]) continue
-            if(this.x !== bacteria[i].x
-                && this.y !== bacteria[i].y
-                && this.deg !== bacteria[i].deg) {
+            if(this._x !== bacteria[i]._x
+                && this._y !== bacteria[i]._y
+                && this._deg !== bacteria[i]._deg) {
                 if(this.isRepulsionBacteria(bacteria[i])) return true
             }
         }
@@ -104,26 +103,26 @@ export class Bacterium {
         return this.isRepulsionPlayer(game.player);
     }
 
-    isRepulsionBacteria(bacteria: this): boolean {
+    private isRepulsionBacteria(bacteria: this): boolean {
         const distance = Vector.VDistanceCenter(
-            {x: this.x, y: this.y, width: this.width, height: this.height},
-            {x: bacteria.x, y: bacteria.y, width: bacteria.width, height: bacteria.height}
+            {x: this._x, y: this._y, width: this._width, height: this._height},
+            {x: bacteria._x, y: bacteria._y, width: bacteria._width, height: bacteria._height}
         )
 
-        if(distance > (this.height / 2 + bacteria.height / 2)) return false
+        if(distance > (this._height / 2 + bacteria._height / 2)) return false
 
         this.repulsion()
 
         return true
     }
 
-    isRepulsionPlayer(player: Player): boolean {
+    private isRepulsionPlayer(player: Player): boolean {
         const distance = Vector.VDistanceCenter(
-            {x: this.x, y: this.y, width: this.width, height: this.height},
+            {x: this._x, y: this._y, width: this._width, height: this._height},
             {x: player.x, y: player.y, width: player.width, height: player.height}
             )
 
-        if(distance > (this.height / 2 + player.height / 2)) return false
+        if(distance > (this._height / 2 + player.height / 2)) return false
 
         player.health -= 1
         this.repulsion()
@@ -132,14 +131,14 @@ export class Bacterium {
     }
 
 
-    repulsion(): void {
-        this.dir.x *= -1
-        this.dir.y *= -1
-        this.speed = 50
-        this.gravitation = 25
+    private repulsion(): void {
+        this._dir.x *= -1
+        this._dir.y *= -1
+        this._speed = 50
+        this._gravitation = 25
     }
 
-    onDamage(bacteria: this[], game: Game): void {
+    private onDamage(bacteria: this[], game: Game): void {
         for(let i = 0; i < bacteria.length; i++) {
             for(let j = 0; j < game.player.playerFire.length; j++) {
                 if (!bacteria[i] || !game.player.playerFire[j]) continue
@@ -149,13 +148,13 @@ export class Bacterium {
 
     }
 
-    isDamage(bacteria: this[], fire: Fire, game: Game) {
+    private isDamage(bacteria: this[], fire: Fire, game: Game) {
         const distance = Vector.VDistanceCenter(
-            {x: this.x, y: this.y, width: this.width, height: this.height},
+            {x: this._x, y: this._y, width: this._width, height: this._height},
             {x: fire.x, y: fire.y, width: fire.width, height: fire.height}
         )
 
-        if(distance > this.height / 2 + fire.height / 2) return false
+        if(distance > this._height / 2 + fire.height / 2) return false
 
         fire.dead(game.player.playerFire)
         this.dead(bacteria)
@@ -163,15 +162,21 @@ export class Bacterium {
         return true
     }
 
-    dead(bacteria: this[]): void {
+    public dead(bacteria: this[]): void {
         for(let i = 0; i < bacteria.length; i++) {
             if(!bacteria[i]) continue
-            if (this.x === bacteria[i].x
-                && this.y === bacteria[i].y
-                && this.deg === bacteria[i].deg) {
+            if (this._x === bacteria[i]._x
+                && this._y === bacteria[i]._y
+                && this._deg === bacteria[i]._deg) {
                 delete bacteria[i]
             }
         }
     }
+
+    public get x(): number { return this._x }
+    public get y(): number { return this._y }
+    public get width(): number { return this._width }
+    public get height(): number { return this._height }
+    public get dir(): {x: number, y: number} { return this._dir }
 
 }
