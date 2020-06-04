@@ -1,0 +1,9 @@
+* {
+    margin: 0;
+    padding: 0;
+    cursor: none;
+}
+
+#canvas {
+    background-color: rgba(34, 150, 23, .5);
+}
