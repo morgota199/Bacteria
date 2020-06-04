@@ -1,5 +1,7 @@
 import {Game} from "./Game";
 import {Player} from "./Player";
+import {Vector} from "./utils/Vector";
+import {Fire} from "./Fire";
 
 export class Enemies {
     counterEnemies: number
@@ -19,6 +21,8 @@ export class Enemies {
 
     update(game: Game): void {
         for(let i = 0; i < this.bacteria.length; i++){
+            if(!this.bacteria[i]) continue
+
             this.bacteria[i].update(game, this.bacteria)
         }
     }
@@ -37,6 +41,7 @@ export class Bacterium {
     gravitation: number = 0.99
     deg: number = 0
     dir: {x: number, y: number}
+    damage: boolean = false
 
     constructor(x: number, y: number) {
         this.x = x
@@ -51,7 +56,7 @@ export class Bacterium {
         if (game.player.x + (game.player.width / 2) < this.x + (this.width / 2)) this.dir.x = -1
 
         this.repulsionFromBacteria(bacteria, game)
-
+        this.onDamage(bacteria, game)
 
         this.move(game)
 
@@ -76,6 +81,7 @@ export class Bacterium {
 
     draw(canvas: CanvasRenderingContext2D): void {
         canvas.save()
+
         canvas.translate(this.x + (this.width / 2), this.y + (this.height / 2))
         canvas.rotate(this.deg)
         canvas.translate(-(this.x + (this.width / 2)), -(this.y + (this.height / 2)))
@@ -85,8 +91,9 @@ export class Bacterium {
         canvas.restore()
     }
 
-    repulsionFromBacteria(bacteria: Array<this>, game: Game): boolean {
+    repulsionFromBacteria(bacteria: this[], game: Game): boolean {
         for(let i = 0; i < bacteria.length; i++) {
+            if(!bacteria[i]) continue
             if(this.x !== bacteria[i].x
                 && this.y !== bacteria[i].y
                 && this.deg !== bacteria[i].deg) {
@@ -98,17 +105,12 @@ export class Bacterium {
     }
 
     isRepulsionBacteria(bacteria: this): boolean {
-        const myX = (this.x + this.width / 2),
-            myY = (this.y + this.height / 2)
+        const distance = Vector.VDistanceCenter(
+            {x: this.x, y: this.y, width: this.width, height: this.height},
+            {x: bacteria.x, y: bacteria.y, width: bacteria.width, height: bacteria.height}
+        )
 
-        const bacteriaX = (bacteria.x + bacteria.width / 2),
-            bacteriaY = (bacteria.y + bacteria.width / 2)
-
-        const a = Math.abs(myX - bacteriaX)
-        const b = Math.abs(myY - bacteriaY)
-        const c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2))
-
-        if(c > (this.height / 2 + bacteria.height / 2)) return false
+        if(distance > (this.height / 2 + bacteria.height / 2)) return false
 
         this.repulsion()
 
@@ -116,22 +118,19 @@ export class Bacterium {
     }
 
     isRepulsionPlayer(player: Player): boolean {
-        const bacteriaX = (this.x + this.width / 2),
-            bacteriaY = (this.y + this.height / 2)
+        const distance = Vector.VDistanceCenter(
+            {x: this.x, y: this.y, width: this.width, height: this.height},
+            {x: player.x, y: player.y, width: player.width, height: player.height}
+            )
 
-        const  playerX = (player.x + player.width / 2),
-           playerY = (player.y + player.height / 2)
+        if(distance > (this.height / 2 + player.height / 2)) return false
 
-        const a = Math.abs(bacteriaX - playerX)
-        const b = Math.abs( bacteriaY - playerY)
-        const c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2))
-
-        if(c > (this.height / 2 + player.height / 2)) return false
         player.health -= 1
         this.repulsion()
 
         return true
     }
+
 
     repulsion(): void {
         this.dir.x *= -1
@@ -139,4 +138,40 @@ export class Bacterium {
         this.speed = 50
         this.gravitation = 25
     }
+
+    onDamage(bacteria: this[], game: Game): void {
+        for(let i = 0; i < bacteria.length; i++) {
+            for(let j = 0; j < game.player.playerFire.length; j++) {
+                if (!bacteria[i] || !game.player.playerFire[j]) continue
+                this.isDamage(bacteria, game.player.playerFire[j], game)
+            }
+        }
+
+    }
+
+    isDamage(bacteria: this[], fire: Fire, game: Game) {
+        const distance = Vector.VDistanceCenter(
+            {x: this.x, y: this.y, width: this.width, height: this.height},
+            {x: fire.x, y: fire.y, width: fire.width, height: fire.height}
+        )
+
+        if(distance > this.height / 2 + fire.height / 2) return false
+
+        fire.dead(game.player.playerFire)
+        this.dead(bacteria)
+
+        return true
+    }
+
+    dead(bacteria: this[]): void {
+        for(let i = 0; i < bacteria.length; i++) {
+            if(!bacteria[i]) continue
+            if (this.x === bacteria[i].x
+                && this.y === bacteria[i].y
+                && this.deg === bacteria[i].deg) {
+                delete bacteria[i]
+            }
+        }
+    }
+
 }

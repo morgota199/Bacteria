@@ -1,6 +1,7 @@
 import {Game} from "./Game";
 import {Bacterium} from "./Enemies";
 import {Fire} from "./Fire";
+import {Vector} from "./utils/Vector";
 
 export class Player {
     x: number
@@ -17,7 +18,7 @@ export class Player {
     fusionCount: number = 0
     img: Array<CanvasImageSource>
     health = 5
-    playerFire: Fire | null = null
+    playerFire: Fire[] = []
 
     constructor(x: number, y: number) {
         this.x = x
@@ -83,9 +84,10 @@ export class Player {
         canvas.restore()
     }
 
-
     repulsionFromBacteria(bacteria: Array<Bacterium>): boolean {
         for(let i = 0; i < bacteria.length; i++) {
+            if(!bacteria[i]) continue
+
             if(this.isRepulsion(bacteria[i]))
                 return true
         }
@@ -93,17 +95,12 @@ export class Player {
     }
 
     isRepulsion(bacteria: Bacterium): boolean {
-        const myX = (this.x + this.width / 2),
-            myY = (this.y + this.height / 2)
+        const distance = Vector.VDistanceCenter(
+            {x: this.x, y: this.y, width: this.width, height: this.height},
+            {x: bacteria.x, y: bacteria.y, width: bacteria.width, height: bacteria.height}
+        )
 
-        const bacteriaX = (bacteria.x + bacteria.width / 2),
-            bacteriaY = (bacteria.y + bacteria.width / 2)
-
-        const a = Math.abs(myX - bacteriaX)
-        const b = Math.abs(myY - bacteriaY)
-        const c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2))
-
-        if(c > (this.width / 2 + bacteria.height / 2)) return false
+        if(distance > (this.width / 2 + bacteria.height / 2)) return false
 
         if(this.dir.x !== 0 && this.dir.y !== 0){
             this.dir.x *= -1
@@ -120,17 +117,37 @@ export class Player {
 
     fire(game: Game): void {
         if(game.controller.fire){
-            this.playerFire = new Fire(
+            this.playerFire.push(
+                new Fire(
                 this.x + (this.width / 2),
                 this.y + (this.height / 2),
                 game.cursor.x,
                 game.cursor.y
                 )
+            )
         }
 
-        game.controller.fires = false
+        if(this.playerFire.length === 0) return
 
-        if(this.playerFire) this.playerFire.update(game)
+        for(let i = 0; i < this.playerFire.length; i++) {
+            if(!this.playerFire[i]) continue
+
+            if(this.playerFire[i].active) {
+                this.playerFire[i].update(game)
+            } else {
+                delete this.playerFire[i]
+            }
+        }
+
+        const newFire = []
+        for(let i = 0; i < this.playerFire.length; i++) {
+            if(!this.playerFire[i]) continue
+
+            newFire.push(this.playerFire[i])
+        }
+        this.playerFire = newFire
+
+        game.controller.fires = false
     }
 
     animatePlayer(canvas: CanvasRenderingContext2D): void {

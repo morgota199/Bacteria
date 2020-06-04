@@ -10,7 +10,7 @@ export class Game {
     player: Player
     cursor: Cursor
     enemies: Enemies
-    counterEnemies: number = 0
+    counterEnemies: number = 25
 
     constructor(canvas: HTMLCanvasElement) {
         this.map = new Map(canvas)
