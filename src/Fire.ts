@@ -1,14 +1,14 @@
 import {Game} from "./Game";
 import {Abilities} from "./Abilities";
+import {Vector} from "./utils/Vector";
 
 export class Fire extends Abilities {
+    private _speed: number = 5
+    private _direction: number[] = []
     private _sx: number
     private _sy: number
     private _dx: number
     private _dy: number
-    private _speed: number = 10
-    private _direction: {x: number, y: number} = {x: 0, y: 0}
-    gravitation: number = 0.007
 
     constructor(sx: number, sy: number, dx: number, dy: number) {
         super()
@@ -17,6 +17,7 @@ export class Fire extends Abilities {
         this._sy = sy
         this._dx = dx
         this._dy = dy
+        this._direction = Vector.VNormalize([this._sx - this._dx, this._sy - this._dy])
     }
 
     update(game: Game): void {
@@ -25,12 +26,8 @@ export class Fire extends Abilities {
     }
 
     move(): void {
-        const val_x = this._sx - this._dx
-        const val_y = this._sy - this._dy
-        const len = Math.sqrt(Math.pow(val_x, 2) + Math.pow(val_y, 2))
-
-        this._sx -= this._speed * (val_x / len)
-        this._sy -= this._speed * (val_y / len)
+        this._sx -= this._direction[0] * this._speed
+        this._sy -= this._direction[1] * this._speed
     }
 
     draw(canvas: CanvasRenderingContext2D): void {
