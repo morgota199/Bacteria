@@ -6,9 +6,9 @@ export class Fire extends Abilities {
     private _sy: number
     private _dx: number
     private _dy: number
-    private _speed: number = 0.08
+    private _speed: number = 10
     private _direction: {x: number, y: number} = {x: 0, y: 0}
-    gravitation: number = 10
+    gravitation: number = 0.007
 
     constructor(sx: number, sy: number, dx: number, dy: number) {
         super()
@@ -17,7 +17,6 @@ export class Fire extends Abilities {
         this._sy = sy
         this._dx = dx
         this._dy = dy
-        console.log(this)
     }
 
     update(game: Game): void {
@@ -26,8 +25,12 @@ export class Fire extends Abilities {
     }
 
     move(): void {
-        this._sy -= (this._sy - this._dy) * this._speed
-        this._sx -= (this._sx - this._dx) * this._speed
+        const val_x = this._sx - this._dx
+        const val_y = this._sy - this._dy
+        const len = Math.sqrt(Math.pow(val_x, 2) + Math.pow(val_y, 2))
+
+        this._sx -= this._speed * (val_x / len)
+        this._sy -= this._speed * (val_y / len)
     }
 
     draw(canvas: CanvasRenderingContext2D): void {
