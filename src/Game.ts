@@ -2,15 +2,15 @@ import {Map} from "./Map";
 import {Controller} from "./Controller";
 import {Player} from "./Player";
 import {Cursor} from "./Cursor";
-import {Enemies} from "./Enemies";
+// import {Enemies} from "./Enemies";
 
 export class Game {
     map: Map
     controller: Controller
     player: Player
     cursor: Cursor
-    enemies: Enemies
-    counterEnemies: number = 25
+    //enemies: Enemies
+    counterEnemies: number = 0
 
     constructor(canvas: HTMLCanvasElement) {
         this.map = new Map(canvas)
@@ -18,7 +18,7 @@ export class Game {
         this.player = new Player((this.map.width / 2) - 25, this.map.height / 2 - 50)
         this.cursor = new Cursor(this.map.width / 2, this.map.height / 2)
 
-        this.enemies = new Enemies(this.counterEnemies, this)
+        //this.enemies = new Enemies(this.counterEnemies, this)
         this.controller.addListener()
     }
 
@@ -30,7 +30,7 @@ export class Game {
     }
 
     update(): void {
-        this.enemies.update(this)
+       // this.enemies.update(this)
         this.player.update(this)
         this.cursor.update(this)
         this.healthIndicator()

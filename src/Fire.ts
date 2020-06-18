@@ -2,26 +2,37 @@ import {Game} from "./Game";
 import {Abilities} from "./Abilities";
 import {Vector} from "./utils/Vector";
 
+interface Position {
+    x: number,
+    y: number
+}
+
+interface Size {
+    width: number,
+    height: number
+}
+
 export class Fire extends Abilities {
-    private _sy: number
-    private _sx: number
-    private readonly _dx: number
-    private readonly _dy: number
-    private readonly _direction: number[] = []
+    private readonly _position: Position
+    private readonly _size    : Size
+    private _move_to          : Position
+    private _direction        : Position
 
     private _speed: number = 5
-    private _width: number = 15
-    private _height: number = 15
     private _active: boolean = true
 
-    constructor(sx: number, sy: number, dx: number, dy: number) {
+    constructor(player: Position, cursor: Position) {
         super()
 
-        this._sx = sx
-        this._sy = sy
-        this._dx = dx
-        this._dy = dy
-        this._direction = Vector.VNormalize([this._sx - this._dx, this._sy - this._dy])
+        this._position = player
+        this._move_to = cursor
+
+        this._size = {width: 15, height: 15}
+
+        this._direction = Vector.VNormalize({
+            x: this._position.x - this._move_to.x,
+            y: this._position.y - this._move_to.y
+        })
     }
 
     public update(game: Game): void {
@@ -30,34 +41,48 @@ export class Fire extends Abilities {
     }
 
     private move(): void {
-        this._sx -= this._direction[0] * this._speed
-        this._sy -= this._direction[1] * this._speed
+        this._position.x -= this._direction.x * this._speed
+        this._position.y -= this._direction.y * this._speed
 
-        if(this._sx > window.innerWidth || this._sx < 0) this._active = false
-        if(this._sy > window.innerHeight || this._sy < 0) this._active = false
+        const x = this._position.x
+        const y = this._position.y
+
+        if(x > window.innerWidth || x < 0)  this._active = false
+        if(y > window.innerHeight || y < 0) this._active = false
     }
 
     private draw(canvas: CanvasRenderingContext2D): void {
+        const x = this._position.x
+        const y = this._position.y
+        const w = this._size.width
+        const h = this._size.height
+        const c_w = this._size.width / 2
+        const c_h = this._size.height / 2
+
         canvas.beginPath()
-        canvas.fillRect(this._sx - (this._width / 2), this._sy - (this._height / 2), this._width, this._height)
+        canvas.fillRect(x - c_w, y - c_h, w, h)
         canvas.closePath()
     }
 
-    public get active(): boolean {
-        return this._active
-    }
+
 
     public dead(fires: this[]): void {
+        const x = this._position.x
+        const y = this._position.y
+
         for(let i = 0; i < fires.length; i++) {
             if(!fires[i]) continue
-            if (this._sx === fires[i].x && this._sy === fires[i].y) {
+
+            const f_x = fires[i].position.x
+            const f_y = fires[i].position.y
+
+            if (x === f_x && y === f_y) {
                 delete fires[i]
             }
         }
     }
 
-    public get x(): number      {  return this._sx  }
-    public get y(): number      {  return this._sy  }
-    public get width(): number  {  return this._width  }
-    public get height(): number {  return this._height }
+    public get active()  : boolean  {return this._active}
+    public get position(): Position {return this._position}
+    public get size()    : Size     {return this._size}
 }
